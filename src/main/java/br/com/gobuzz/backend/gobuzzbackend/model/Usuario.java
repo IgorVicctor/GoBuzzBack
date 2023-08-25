@@ -9,7 +9,6 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "usuario")
 public class Usuario {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,6 +17,11 @@ public class Usuario {
     private String email;
     private String senha;
     private String tipo_usuario;
+    private String faculdade;
+    private String periodo;
+    private String curso;
+    private String dias_transporte;
+    private String matricula;
 
     public Usuario() {
     }
@@ -60,5 +64,45 @@ public class Usuario {
 
     public void setTipo_usuario(String tipo_usuario) {
         this.tipo_usuario = tipo_usuario;
+    }
+
+    public String getFaculdade() {
+        return faculdade;
+    }
+
+    public void setFaculdade(String faculdade) {
+        this.faculdade = faculdade;
+    }
+
+    public String getPeriodo() {
+        return periodo;
+    }
+
+    public void setPeriodo(String periodo) {
+        this.periodo = periodo;
+    }
+
+    public String getCurso() {
+        return curso;
+    }
+
+    public void setCurso(String curso) {
+        this.curso = curso;
+    }
+
+    public String getDias_transporte() {
+        return dias_transporte;
+    }
+
+    public void setDias_transporte(String dias_transporte) {
+        this.dias_transporte = dias_transporte;
+    }
+
+    public String getMatricula() {
+        return matricula;
+    }
+
+    public void setMatricula(String matricula) {
+        this.matricula = matricula;
     }
 }

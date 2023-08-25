@@ -1,46 +1,48 @@
 package br.com.gobuzz.backend.gobuzzbackend.controller;
 
-import br.com.gobuzz.backend.gobuzzbackend.model.Usuario;
-import br.com.gobuzz.backend.gobuzzbackend.service.UsuarioService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import br.com.gobuzz.backend.gobuzzbackend.model.Usuario;
+import br.com.gobuzz.backend.gobuzzbackend.service.UsuarioService;
+
 @RestController
-@RequestMapping("/usuarios")
-@CrossOrigin(origins = "http://192.168.31.95:8080") // Substitua pela URL do seu aplicativo React Native
+@RequestMapping("/api/usuarios")
 public class UsuarioController {
 
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
 
     @Autowired
     public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
+    @PostMapping("/cadastro")
+    public ResponseEntity<Usuario> cadastrarUsuario(@RequestBody Usuario usuario) {
+        Usuario novoUsuario = usuarioService.criarUsuario(usuario);
+        return new ResponseEntity<>(novoUsuario, HttpStatus.CREATED);
+    }
+
     @GetMapping
     public ResponseEntity<List<Usuario>> obterTodosUsuarios() {
         List<Usuario> usuarios = usuarioService.obterTodosUsuarios();
-        return ResponseEntity.ok(usuarios);
+        return new ResponseEntity<>(usuarios, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> obterUsuarioPorId(@PathVariable Long id) {
         Usuario usuario = usuarioService.obterUsuarioPorId(id);
         if (usuario != null) {
-            return ResponseEntity.ok(usuario);
+            return new ResponseEntity<>(usuario, HttpStatus.OK);
         } else {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
 
 
-    // Outros métodos REST...
+    // Outros métodos do controller...
 }
