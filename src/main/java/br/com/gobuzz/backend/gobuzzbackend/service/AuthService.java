@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,8 +41,12 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-        return plainPassword.equals(usuario.getSenha());
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        boolean passwordsMatch = passwordEncoder.matches(plainPassword, usuario.getSenha());
+
+        return passwordsMatch;
     }
+
 
     public ResponseEntity<?> authenticateAndGenerateToken(String email, String senha) {
         try {
