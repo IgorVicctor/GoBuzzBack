@@ -24,25 +24,26 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> autenticarUsuario(@RequestBody LoginRequest loginRequest) {
-        String email = loginRequest.getEmail();
-        String senha = loginRequest.getSenha();
+        public ResponseEntity<?> autenticarUsuario(@RequestBody LoginRequest loginRequest) {
+            String email = loginRequest.getEmail();
+            String senha = loginRequest.getSenha();
 
-        // Verifica se a senha é criptografada (começa com "$2a$") ou não
-        if (senha.startsWith("$2a$")) {
-            // Senha já está criptografada, realiza autenticação normalmente
-            return authService.authenticateAndGenerateToken(email, senha);
-        } else {
-            // Senha não criptografada, verifica se é válida diretamente do banco de dados
-            if (authService.authenticateWithPlainPassword(email, senha)) {
-                // Autenticação bem-sucedida, gera token
-                return authService.generateTokenResponse(email);
+            // Verifica se a senha é criptografada (começa com "$2a$") ou não
+            if (senha.startsWith("$2a$")) {
+                // Senha já está criptografada, realiza autenticação normalmente
+                return authService.authenticateAndGenerateTokenWithUserId(email, senha);
             } else {
-                // Autenticação falhou
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
+                // Senha não criptografada, verifica se é válida diretamente do banco de dados
+                if (authService.authenticateWithPlainPassword(email, senha)) {
+                    // Autenticação bem-sucedida, gera token
+                    return authService.authenticateAndGenerateTokenWithUserId(email, senha);
+                } else {
+                    // Autenticação falhou
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
+                }
             }
         }
-    }
+
 
     // Restante do código
 }

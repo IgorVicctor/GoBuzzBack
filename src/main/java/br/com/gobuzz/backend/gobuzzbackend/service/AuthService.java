@@ -47,30 +47,35 @@ public class AuthService {
         return passwordsMatch;
     }
 
-
-    public ResponseEntity<?> authenticateAndGenerateToken(String email, String senha) {
+    public ResponseEntity<?> authenticateAndGenerateTokenWithUserId(String email, String senha) {
         try {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            
+
             // Autentica usando a senha criptografada
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, senha));
-            
-            // Gera o token e responde com a resposta contendo o token
+
+            // Obtém o ID do usuário
+            Long userId = usuarioRepository.findIdByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("ID do usuário não encontrado"));
+
+            // Gera o token e responde com a resposta contendo o token e o ID do usuário
             String token = jwtTokenUtil.generateToken(userDetails);
-            return ResponseEntity.ok(new AuthResponse(token));
+            return ResponseEntity.ok(new AuthResponse(token, userId));
         } catch (AuthenticationException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
         }
     }
-    
+
     public ResponseEntity<?> generateTokenResponse(String email) {
         try {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
             String token = jwtTokenUtil.generateToken(userDetails);
 
-            return ResponseEntity.ok(new AuthResponse(token));
+            return ResponseEntity.ok(new AuthResponse(token, null));
         } catch (UsernameNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não encontrado");
         }
     }
 }
+
+

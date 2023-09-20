@@ -1,10 +1,10 @@
-package br.com.gobuzz.backend.gobuzzbackend.controller;
+package br.com.gobuzz.backend.gobuzzbackend.model;
 
-public class AuthResponse {
+public class AuthResponseWithId {
     private final String token;
     private final Long userId;
 
-    public AuthResponse(String token, Long userId) {
+    public AuthResponseWithId(String token, Long userId) {
         this.token = token;
         this.userId = userId;
     }
