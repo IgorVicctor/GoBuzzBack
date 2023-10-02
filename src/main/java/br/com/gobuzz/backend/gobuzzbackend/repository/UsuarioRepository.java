@@ -11,9 +11,12 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);
+    
     // Define a method to find the user ID by email
     @Query("SELECT u.id FROM Usuario u WHERE u.email = :email")
     Optional<Long> findIdByEmail(@Param("email") String email);
-
+    
+    // Define a method to find a user by codigoQR
+    Optional<Usuario> findByCodigoQR(String codigoQR);
 }
 

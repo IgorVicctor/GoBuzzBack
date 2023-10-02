@@ -1,5 +1,6 @@
 package br.com.gobuzz.backend.gobuzzbackend.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -22,6 +23,18 @@ public class Usuario {
     private String curso;
     private String dias_transporte;
     private String matricula;
+
+    @Column(name = "codigo_qr")
+    private String codigoQR; // Adicionando a coluna codigo_qr
+
+    // Getters e setters para o novo campo
+    public String getCodigoQR() {
+        return codigoQR;
+    }
+
+    public void setCodigoQR(String codigoQR) {
+        this.codigoQR = codigoQR;
+    }
 
     public Usuario() {
     }

@@ -1,13 +1,13 @@
 package br.com.gobuzz.backend.gobuzzbackend.service;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 import br.com.gobuzz.backend.gobuzzbackend.model.Usuario;
 import br.com.gobuzz.backend.gobuzzbackend.repository.UsuarioRepository;
-
-import java.util.List;
 
 @Service
 public class UsuarioService {
@@ -32,13 +32,14 @@ public class UsuarioService {
     }
 
     public Usuario obterUsuarioPorId(Long id) {
-        return usuarioRepository.findById(id).orElse(null);
+        Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
+        return usuarioOptional.orElse(null);
     }
 
-
     public Usuario atualizarUsuario(Long id, Usuario usuarioAtualizado) {
-        Usuario usuarioExistente = usuarioRepository.findById(id).orElse(null);
-        if (usuarioExistente != null) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
+        if (usuarioOptional.isPresent()) {
+            Usuario usuarioExistente = usuarioOptional.get();
             usuarioExistente.setNome(usuarioAtualizado.getNome());
             usuarioExistente.setEmail(usuarioAtualizado.getEmail());
             usuarioExistente.setSenha(usuarioAtualizado.getSenha());
@@ -54,6 +55,14 @@ public class UsuarioService {
         return null; // Retorne algo apropriado caso o usuário não seja encontrado
     }
 
+    public Usuario findById(Long id) {
+        return usuarioRepository.findById(id).orElse(null);
+    }
+
+    public Usuario save(Usuario usuario) {
+        return usuarioRepository.save(usuario);
+    }
+    
+    
     // Outros métodos de serviço...
 }
-
