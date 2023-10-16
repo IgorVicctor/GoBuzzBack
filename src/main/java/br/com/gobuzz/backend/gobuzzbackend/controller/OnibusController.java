@@ -1,18 +1,14 @@
 package br.com.gobuzz.backend.gobuzzbackend.controller;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import br.com.gobuzz.backend.gobuzzbackend.model.Usuario;
-import br.com.gobuzz.backend.gobuzzbackend.service.QRCodeService;
-import br.com.gobuzz.backend.gobuzzbackend.service.UsuarioService;
+import br.com.gobuzz.backend.gobuzzbackend.repository.UsuarioRepository;
 
 @RestController
 @RequestMapping("/onibus")
@@ -22,78 +18,99 @@ public class OnibusController {
     public static final int CAPACIDADE_MAXIMA = 50;
 
     @Autowired
-    private QRCodeService qrCodeService;
-
-    @Autowired
-    private UsuarioService usuarioService; // Injete o serviço de usuário aqui
-
-    private List<Usuario> passageiros = new ArrayList<>();
-    private boolean ativo = false;
-
-    @GetMapping("/qrcode/{usuarioId}")
-public ResponseEntity<byte[]> gerarQRCodeParaUsuario(@PathVariable Long usuarioId) {
-    try {
-        // Lógica para buscar os dados do usuário com o ID especificado
-        Usuario usuario = usuarioService.obterUsuarioPorId(usuarioId);
-
-        int largura = 300; // Defina a largura do QR code
-        int altura = 300; // Defina a altura do QR code
-        
-        if (usuario != null) {
-            String conteudoQRCode = "Informações do usuário: " + usuario.getNome() + ", ID: " + usuario.getId();
-            
-            // Gere o QR code e armazene-o no usuário
-            byte[] qrCode = qrCodeService.generateQRCode(conteudoQRCode, largura, altura);
-            usuario.setCodigoQR(Base64.getEncoder().encodeToString(qrCode)); // Converta o QR code em uma string Base64
-                
-            // Atualize o usuário para armazenar o QR code
-            usuarioService.atualizarUsuario(usuarioId, usuario);
-                
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.IMAGE_PNG);
-                
-            return new ResponseEntity<>(qrCode, headers, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    } catch (Exception e) {
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-}
-
-    
-
-    @PostMapping("/iniciar")
-    public ResponseEntity<String> iniciarOnibus() {
-        ativo = true;
-        return ResponseEntity.ok("Ônibus iniciado");
-    }
-
-    @PostMapping("/encerrar")
-    public ResponseEntity<String> encerrarOnibus() {
-        ativo = false;
-        passageiros.clear();
-        return ResponseEntity.ok("Ônibus encerrado");
-    }
+    private UsuarioRepository usuarioRepository;
 
     @GetMapping("/status")
     public ResponseEntity<String> getStatus() {
-        String status = ativo ? "Ativo" : "Inativo";
-        return ResponseEntity.ok("Status do ônibus: " + status);
+        return ResponseEntity.ok("Ônibus está sempre ativo");
     }
 
-    @GetMapping("/contagem")
-    public ResponseEntity<Integer> getContagemPassageiros() {
-        return ResponseEntity.ok(passageiros.size());
+    @GetMapping("/contagem/{motoristaId}")
+    public ResponseEntity<Integer> getContagemPassageiros(@PathVariable Long motoristaId) {
+        Optional<Usuario> motoristaOptional = usuarioRepository.findById(motoristaId);
+
+        if (motoristaOptional.isPresent()) {
+            Usuario motorista = motoristaOptional.get();
+            List<Usuario> alunos = motorista.getAlunos();
+            
+            // Verifique se a lista de alunos não é nula
+            if (alunos != null) {
+                return ResponseEntity.ok(alunos.size());
+            } else {
+                return ResponseEntity.ok(0); // Não há alunos associados a esse motorista
+            }
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-   
+
+    @PostMapping("/adicionar-aluno/{motoristaId}/{alunoId}")
+    public ResponseEntity<String> adicionarAlunoAoOnibus(@PathVariable Long motoristaId, @PathVariable Long alunoId) {
+        if (passageiros.size() < CAPACIDADE_MAXIMA) {
+            Optional<Usuario> motoristaOptional = usuarioRepository.findById(motoristaId);
+            Optional<Usuario> alunoOptional = usuarioRepository.findById(alunoId);
+
+            if (motoristaOptional.isPresent() && alunoOptional.isPresent()) {
+                Usuario motorista = motoristaOptional.get();
+                Usuario aluno = alunoOptional.get();
+
+                // Certifique-se de que o usuário fornecido é um aluno, ignorando maiúsculas e minúsculas
+                if (aluno.getTipo_usuario() != null && aluno.getTipo_usuario().equalsIgnoreCase("ALUNO")) {
+                    // Verifique se o aluno já está na lista do motorista
+                    List<Usuario> alunosDoMotorista = motorista.getAlunos();
+                    if (alunosDoMotorista != null && alunosDoMotorista.contains(aluno)) {
+                        // Se o aluno já está na lista, remova-o
+                        alunosDoMotorista.remove(aluno);
+                        aluno.setMotorista(null); // Remova a referência ao motorista
+                        usuarioRepository.save(motorista); // Salve as alterações no banco de dados
+
+                        return ResponseEntity.ok("Aluno removido do ônibus!");
+                    } else {
+                        // Adicione o aluno à lista de alunos do motorista
+                        if (alunosDoMotorista == null) {
+                            alunosDoMotorista = new ArrayList<>();
+                        }
+                        alunosDoMotorista.add(aluno);
+
+                        // Atualize o campo motorista do aluno com o objeto do motorista
+                        aluno.setMotorista(motorista);
+
+                        // Salve as alterações no banco de dados
+                        usuarioRepository.save(motorista);
+
+                        return ResponseEntity.ok("Aluno adicionado ao ônibus!");
+                    }
+                } else {
+                    return ResponseEntity.badRequest().body("O usuário não é um aluno");
+                }
+            } else {
+                return ResponseEntity.badRequest().body("Motorista ou aluno não encontrado");
+            }
+        } else {
+            return ResponseEntity.badRequest().body("Não é possível adicionar aluno ao ônibus, a capacidade máxima foi atingida");
+        }
+    }
+
+
+
+    @GetMapping("/motorista/{motoristaId}/alunos")
+    public ResponseEntity<List<Usuario>> getAlunosDoOnibus(@PathVariable Long motoristaId) {
+        // Verifique se o motorista com o ID fornecido existe
+        Optional<Usuario> motoristaOptional = usuarioRepository.findById(motoristaId);
+
+        if (motoristaOptional.isPresent()) {
+            Usuario motorista = motoristaOptional.get();
+            List<Usuario> alunos = motorista.getAlunos();
+            return ResponseEntity.ok(alunos);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     public boolean isAtivo() {
-        return ativo;
+        return true; // Ônibus sempre ativo
     }
 
-    public void addPassageiro(Usuario usuario) {
-        passageiros.add(usuario);
-    }
+    private List<Usuario> passageiros = new ArrayList<>();
 }

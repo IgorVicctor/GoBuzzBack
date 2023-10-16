@@ -1,13 +1,15 @@
 package br.com.gobuzz.backend.gobuzzbackend.model;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Table(name = "usuario")
 public class Usuario {
     @Id
@@ -21,22 +23,60 @@ public class Usuario {
     private String faculdade;
     private String periodo;
     private String curso;
-    private String dias_transporte;
     private String matricula;
+    private String veiculo;
+    private String cnh;
+    private String validade;
+    private String selecionaDIas;
+    private String cidade;
 
-    @Column(name = "codigo_qr")
-    private String codigoQR; // Adicionando a coluna codigo_qr
+    @Column(name = "is_aluno")
+    private boolean isAluno;
 
-    // Getters e setters para o novo campo
-    public String getCodigoQR() {
-        return codigoQR;
+    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "motorista_id")
+    private Usuario motorista;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "motorista")
+    private List<Usuario> alunos;
+
+    @Column(name = "imagem", columnDefinition = "BLOB")
+    private byte[] imagem;
+
+
+    public byte[] getImagem() {
+        return imagem;
+    }
+    
+    public void setImagem(byte[] imagem) {
+        this.imagem = imagem;
+    }
+    
+
+    public String getVeiculo() {
+        return veiculo;
     }
 
-    public void setCodigoQR(String codigoQR) {
-        this.codigoQR = codigoQR;
+    public void setVeiculo(String veiculo) {
+        this.veiculo = veiculo;
     }
 
-    public Usuario() {
+    public String getCnh() {
+        return cnh;
+    }
+
+    public void setCnh(String cnh) {
+        this.cnh = cnh;
+    }
+
+    public String getValidade() {
+        return validade;
+    }
+
+    public void setValidade(String validade) {
+        this.validade = validade;
     }
 
     public Long getId() {
@@ -103,13 +143,13 @@ public class Usuario {
         this.curso = curso;
     }
 
-    public String getDias_transporte() {
-        return dias_transporte;
-    }
+    // public String getDiasDeTransporte() {
+    //     return dias_de_transporte;
+    // }
 
-    public void setDias_transporte(String dias_transporte) {
-        this.dias_transporte = dias_transporte;
-    }
+    // public void setDiasDeTransporte(String dias_de_transporte) {
+    //     this.dias_de_transporte = dias_de_transporte;
+    // }
 
     public String getMatricula() {
         return matricula;
@@ -117,5 +157,68 @@ public class Usuario {
 
     public void setMatricula(String matricula) {
         this.matricula = matricula;
+    }
+
+    public boolean isAluno() {
+        return isAluno;
+    }
+
+    public void setAluno(boolean isAluno) {
+        this.isAluno = isAluno;
+    }
+
+    public Usuario getMotorista() {
+        return motorista;
+    }
+
+    public void setMotorista(Usuario motorista) {
+        this.motorista = motorista;
+    }
+
+    // public Usuario getDias() {
+    //     return motorista;
+    // }
+
+    // public void setDias(Usuario motorista) {
+    //     this.motorista = motorista;
+    // }
+
+    public String getSelecionaDias() {
+        return selecionaDIas;
+    }
+
+    public void setSelecionaDias(String selecionaDIas) {
+        this.selecionaDIas = selecionaDIas;
+    }
+
+    public String getCidade() {
+        return cidade;
+    }
+
+    public void setCidade(String cidade) {
+        this.cidade = cidade;
+    }
+    
+    public List<Usuario> getAlunos() {
+        return alunos;
+    }
+
+    public void setAlunos(List<Usuario> alunos) {
+        this.alunos = alunos;
+    }
+
+    // Método para adicionar um aluno existente ao ônibus do motorista
+    public void adicionarAluno(Usuario aluno) {
+        if (aluno.isAluno()) {
+            if (motorista == null) {
+                motorista = aluno; // Atribua o próprio aluno como motorista
+                motorista.setAluno(false);
+            }
+            if (alunos == null) {
+                alunos = new ArrayList<>();
+            }
+            alunos.add(aluno);
+            aluno.setMotorista(this); // Configure o motorista do aluno
+        }
     }
 }

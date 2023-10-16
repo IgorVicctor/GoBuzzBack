@@ -78,6 +78,13 @@
             <version>3.4.0</version> <!-- Use a versão adequada -->
         </dependency>
 
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+
 
     </dependencies>
 
